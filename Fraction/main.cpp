@@ -2,8 +2,11 @@
 using namespace std;
 
 class Fraction;
+
 Fraction operator*(Fraction left, Fraction right);
 Fraction operator/(const Fraction& left, const Fraction& right);
+Fraction operator+(Fraction left, Fraction right);
+Fraction operator-(Fraction left, Fraction right);
 
 class Fraction
 {
@@ -104,7 +107,19 @@ public:
 		cout << "CopyAssignment:\t\t" << this << endl;
 		return *this;
 	}
+	// оператор сложения
 
+	Fraction& operator+=(const Fraction& other)
+	{
+				return *this = *this + other;
+	}
+	
+	// оператор вычитания
+
+	Fraction& operator-=(const Fraction& other)
+	{
+		return *this = *this - other;
+	}
 
 	// оператор умножения и присления кода перегрузки
 	Fraction& operator*=(const Fraction& other)
@@ -125,7 +140,7 @@ public:
 
 
 	//				Increment/Decrement:
-	//   перегрузка оператоар инктремент/декремент 
+	//   перегрузка оператоар инкремент/декремент 
 
 	Fraction& operator++()	// префиксный инкремент перегрузка ++i
 	{
@@ -143,6 +158,23 @@ public:
 		integer++;
 		return old;
 	}
+
+	Fraction& operator--()	// префиксный декремент перегрузка ++i
+	{
+		to_proper();
+		integer--;
+		return *this;
+	}
+
+	Fraction operator--(int)//Postfix декремент
+	{
+		
+		to_proper();
+		Fraction old = *this;
+		integer--;
+		return old;
+	}
+
 
 
 	//				методы
@@ -194,6 +226,14 @@ public:
 		return *this;
 	}
 
+	Fraction& poz_denominator()
+	{
+		if(denominator<0)
+			denominator=denominator*(-1);
+			return*this;
+	}
+
+
 	// метод вывода дроби на экран
 	void print()const
 	{
@@ -210,22 +250,58 @@ public:
 };
 
 // перегружаем класс Fraction  за классом
+
+
+// оператор сложения
+Fraction operator+(Fraction left, Fraction right) // передача по значению
+{
+	left.to_improper(); // объекты скопируются в функцию
+	right.to_improper();
+	
+	return Fraction
+	(
+		left.get_numenator() * right.get_numenator()
+		+
+		right.get_numenator()* left.get_numenator(),
+		left.get_denominator() + right.get_denominator()
+	).to_proper().reduce();
+
+	// оператор вычитания
+
+	Fraction operator-(Fraction left, Fraction right) // передача по значению
+	{
+		left.to_improper(); 
+		right.to_improper();
+
+		return Fraction
+		(
+			left.get_numenator() * right.get_numenator()
+			-
+			right.get_numenator() * left.get_numenator(),
+			left.get_denominator() + right.get_denominator()
+		).to_proper().reduce().poz_denominator();
+		cout << 2 << endl;
+	} 
+
+
 //оператор умножения
 
 Fraction operator*(Fraction left, Fraction right) // передача по значению
 {
 	left.to_improper(); // объекты скопируются в функцию
 	right.to_improper();
+	
+	
 	/*Fraction result; // создает объект в котором сохраняется результат
 	result.set_numerator(left.get_numerator()*right.get_numerator());
 	result.set_denominator(left.get_denominator()*right.get_denominator());*/
-	/*Fraction result
+	
+	return Fraction 
 	(
-		left.get_numerator()*right.get_numerator(),
+		left.get_numenator()*right.get_numenator(),
 		left.get_denominator()*right.get_denominator()
-	);
-	result.to_proper();
-	return result;*/
+	).to_proper().reduce();
+	
 	//Прямо в 'return' создаем временный безымянный объект типа 'Fraction'
 	//Временные безымянные объекты существуют в пределах одного выражения, 
 	//и удаляются из памяти по завершении выражения
@@ -307,6 +383,12 @@ void main()
 
 	Fraction D = A / B;
 	D.print();*/
+
+	Fraction E = A + B;
+	E.print();
+
+	Fraction F = A - B;
+	F.print();
 
 
 	A *= B;
