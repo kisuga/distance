@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include<iostream>
 using namespace std;
 
@@ -62,6 +63,18 @@ public:
 		cout << "1ArgCjnstructor:\t" << this << endl;
 	}
 
+	Fraction(double decimal)
+	{
+		decimal += 1e-10;  // если у нас десятичная дробь в периоде (2,76 напрмиер)
+		this->integer = decimal;	// целая часть десят. дроби
+		decimal -= integer;			//убираем целую часть из десят.дроби
+		//4 000 000 000 - девять разрядов
+		denominator = 1e9;	//1 000 000 000  Записываем максимально-возможный знаменатель(экспоненциальная форма записи)
+		//1e10 = 1*10^10 - 
+		numenator = decimal * denominator;	//вытаскиваем всю дробную часть в числитель
+		reduce(); //сокращение дроби по алгоритму Евклида
+	}
+
 	Fraction(int numerator, int denominator) // консруктор с двумя параметрами
 	{
 		this->integer = 0;
@@ -98,6 +111,14 @@ public:
 
 
 	//операторы:
+
+	Fraction& operator()(int integer, int numenator, int denominator)
+	{
+		set_integer(integer);
+		set_numenator(numenator);
+		set_denominator(denominator);
+		return *this;
+	}
 
 	Fraction& operator=(const Fraction& other)
 	{
@@ -324,6 +345,55 @@ Fraction operator/(const Fraction& left, const Fraction& right)
 	return left * right.inverted();
 }
 
+bool operator==(Fraction left, Fraction right)
+{
+	left.to_improper();
+	right.to_improper();
+	/*if (left.get_numerator()*right.get_denominator() == right.get_numerator()*left.get_denominator()) // этот код работает точно также , как и строчка кода ниже
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}*/
+	return left.get_numenator() * right.get_denominator() == right.get_numenator() * left.get_denominator();
+}
+
+bool operator!=(const Fraction& left, const Fraction& right)
+{
+	return !(left == right);
+}
+
+bool operator>(Fraction left, Fraction right)
+{
+	left.to_improper();
+	right.to_improper();
+	return
+		left.get_numenator() * right.get_denominator() >
+		right.get_numenator() * left.get_denominator();
+}
+
+bool operator<(Fraction left, Fraction right)
+{
+	left.to_improper();
+	right.to_improper();
+	return
+		left.get_numenator() * right.get_denominator() <
+		right.get_numenator() * left.get_denominator();
+}
+
+bool operator>=(const Fraction& left, const Fraction& right)
+{
+	return !(left < right);				// по другому больше или равно можно представить, как " - это не меньше"
+	//return left > right || left == right;
+}
+
+bool operator<=(const Fraction& left, const Fraction& right)
+{
+	return !(left > right);
+}
+
 std::ostream& operator<<(std::ostream& os, const Fraction& obj)
 {
 	if (obj.get_integer())os << obj.get_integer();
@@ -337,11 +407,50 @@ std::ostream& operator<<(std::ostream& os, const Fraction& obj)
 	return os;
 }
 
+std::istream& operator>>(std::istream& is, Fraction& obj)
+{
+#ifdef SIMPLE_INPUT
+	int integer, numenator, denominator;
+	is >> integer >> numenator >> denominator;
+	/*obj.set_integer(integer);
+	obj.set_numenator(numenator);
+	obj.set_denominator(denominator);*/
+	obj(integer, numenator, denominator); // для более простой записи использовали это выражение
+#endif // SIMPLE_INPUT
+
+	const int SIZE = 256;// создаем строку из которой будеи выбирать нужные числа
+	char buffer[SIZE] = {};
+	//is >> buffer;
+	is.getline(buffer, SIZE);
+
+	int number[3] = {}; // создаем массив на 3 элемента для создания дроби
+	int n = 0;	//количество введенных чисел
+	char delimiters[] = "() /";
+	//https://legacy.cplusplus.com/reference/cstring/strtok/ // про новую функцию, котоая приниаает исходную строу и разделители для разделения строк
+	for (char* pch = strtok(buffer, delimiters); pch; pch = strtok(NULL, delimiters))
+	{
+		number[n++] = atoi(pch);
+	}
+	//for (int i = 0; i < n; i++)cout << number[i] << "\t"; cout << endl;
+	obj = Fraction();
+	switch (n)
+	{
+	case 1: obj.set_integer(number[0]); break;
+	case 2: obj.set_numenator(number[0]); obj.set_denominator(number[1]); break;
+	case 3: obj(number[0], number[1], number[2]); break;
+	}
+	return is;
+}
 
 
 // #define CONSTRUCTORS_CHECK
 //#define ARITHMETICAL_OPERATORS_CHECK
 //#define INCREMENT_DECREMENT
+//#define ISTREAM_OPERATOR
+//#define TYPE_CONVERSIONS_BASICS
+//#define CONVERSIONS_FROM_OTHER_TO_CLASS
+//#define CONVERSION_FROM_CLASS_TO_OTHER
+#define HOME_WORK_1
 
 
 void main()
@@ -417,7 +526,68 @@ void main()
 	//cout << A << endl;;
 
 	//cout << (2 == 2) << endl;
-	//cout << (Fraction(1, 4) <= Fraction(5, 10)) << endl;
+	//cout << (Fraction(1, 4) > Fraction(5, 10)) << endl;
+
+#ifdef ISTREAM_OPERATOR
+	Fraction A(2, 3, 4);
+	cout << "Введите простую дробь: "; cin >> A;
+	cout << A << endl;
+#endif // ISTREAM_OPERATOR
+
+#ifdef TYPE_CONVERSIONS_BASICS
+	//(type)value;	C-like notation - смотреть коспект
+	//type(value);	Functional notation - смотреть конспект
+
+	//Conversion from 'type1' to 'type2' possible loss of data. - смотреть конспект
+
+	int a = 2;		//No conversions - нет преобразования
+	double b = 3;	//Conversion from less to more - есть преобразование  от меньшего  к большему
+	int c = a + b;	//Conversion from more to less with no data loss  - преобр. от большего к меньшему без потери данных
+	cout << c << endl;
+	int d = 8.3;	//Conversion from more to less with data loss - преобраз от большему к меньшему с потерей данных
+	cout << d << endl;
+#endif // TYPE_CONVERSIONS_BASICS
+
+
+
+#ifdef CONVERSIONS_FROM_OTHER_TO_CLASS
+	//cout << sizeof(Fraction) << endl;
+	Fraction A = (Fraction)5;		//Conversion from 'int' to 'Fraction'
+	cout << A << endl;
+	cout << delimiter << endl;
+
+	Fraction B;			//Default constructor
+	B = Fraction(8);
+	cout << B << endl;
+#endif // CONVERSIONS_FROM_OTHER_TO_CLASS
+
+#ifdef CONVERSION_FROM_CLASS_TO_OTHER
+	//type-cast operators
+/*
+------------------------
+[explicit] operator type()
+{
+	......;
+	return value;
+}
+------------------------
+*/
+
+	Fraction A(2, 3, 4);
+	//A.to_improper();
+	cout << A << endl;
+
+	int a = (int)A;
+	cout << a << endl;
+
+	double b = A;
+	cout << b << endl;
+#endif // CONVERSION_FROM_CLASS_TO_OTHER
+
+#ifdef HOME_WORK_1
+	Fraction A = 2.75;
+	cout << A << endl;
+#endif // HOME_WORK_1
 }
  
 
