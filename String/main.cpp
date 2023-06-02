@@ -29,35 +29,21 @@ public:
 
 	explicit String(int size = 80):size(size),  str(new char[size]{})
 	{
-		//this->size = size;
-		//this->str = new char[size] {};
-		cout << "Constructor:\t" << this << endl;
+		cout << "DefConstructor:\t" << this << endl;
 	}
 
 	String(const char str[]):size(strlen(str)+1) , str(new char[size]{}) // в первую очередь в конструкторе  
-		//нужно выделить размер и выделить память
-		// в заголовке компилятор сам по умолчанию понимает - то что за скобками это this,
-		// а то что в скобках - это то что прилетело  из вне - т.е. входной параметр
 	{
-		//this->size = strlen(str) + 1;// так как класс хранит размер в байтах, то +1 нужнн для хранения NULL-terminator
-		//this->str = new char [size] {}; //выделили память под строку
 		for (int i = 0; i < size; i++) this->str[i] = str[i];// заполняем память
 		cout << "Constructor:\t" << this << endl;
 	}
 
-	String(const String& other):size(other .size), str (new char[size]{}) // const можно проинициализировать только в заголовке
+	String(const String& other):String(other.str) // const можно проинициализировать только в заголовке
 	{
-		//this->size = other.size;  -  если в заголовке вот такое выражение, то следующие 
-		// две строчки можно вообще убрать из кода
-		//this->str = new char[size] {};
-		for (int i = 0; i < size; i++) this->str[i] = other.str[i];
-		cout << "CpoyConsrtuctor:" << this << endl;
+		cout << "CopyConsrtuctor:" << this << endl;
 	}
 
 	String(String&& other):size(other.size),str(other.str) // вот такую инициализацтию в заголовке 
-		//можно делатьтолько в конструкторах, в операторе и методах мы в приницпе такого сделатьне можем
-		//потому что дальше идет удаление, и пока мы не удалили, мы ничего 
-		//не можем инициализировать, присваивать и т.д. Без удаления  будет утечка памяти
 	{
 		//Shallow copy:
 		//this->size = other.size;
@@ -162,6 +148,9 @@ void main()
 
 	str1 += str2;
 	cout << str1 << endl;
+
+	String str4 = str3;
+	cout << str4 << endl;
 
 #endif  HOME_WORK
 
