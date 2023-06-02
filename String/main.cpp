@@ -27,28 +27,46 @@ public:
 
 	//			Constructor
 
-	explicit String(int size = 80)
+	explicit String(int size = 80):size(size),  str(new char[size]{})
 	{
-		this->size = size;
-		this->str = new char[size] {};
+		//this->size = size;
+		//this->str = new char[size] {};
 		cout << "Constructor:\t" << this << endl;
 	}
 
-	String(const char str[]) // в первую очередь в конструкторе  нужно выделить размер и выделить память
+	String(const char str[]):size(strlen(str)+1) , str(new char[size]{}) // в первую очередь в конструкторе  
+		//нужно выделить размер и выделить память
+		// в заголовке компилятор сам по умолчанию понимает - то что за скобками это this,
+		// а то что в скобках - это то что прилетело  из вне - т.е. входной параметр
 	{
-		this->size = strlen(str) + 1;// так как класс хранит размер в байтах, то +1 нужнн для хранения NULL-terminator
-		this->str = new char [size] {}; //выделили память под строку
+		//this->size = strlen(str) + 1;// так как класс хранит размер в байтах, то +1 нужнн для хранения NULL-terminator
+		//this->str = new char [size] {}; //выделили память под строку
 		for (int i = 0; i < size; i++) this->str[i] = str[i];// заполняем память
 		cout << "Constructor:\t" << this << endl;
 	}
 
-	String(const String& other)
+	String(const String& other):size(other .size), str (new char[size]{}) // const можно проинициализировать только в заголовке
 	{
-		this->size = other.size;
-		this->str = new char[size] {};
+		//this->size = other.size;  -  если в заголовке вот такое выражение, то следующие 
+		// две строчки можно вообще убрать из кода
+		//this->str = new char[size] {};
 		for (int i = 0; i < size; i++) this->str[i] = other.str[i];
 		cout << "CpoyConsrtuctor:" << this << endl;
 	}
+
+	String(String&& other):size(other.size),str(other.str) // вот такую инициализацтию в заголовке 
+		//можно делатьтолько в конструкторах, в операторе и методах мы в приницпе такого сделатьне можем
+		//потому что дальше идет удаление, и пока мы не удалили, мы ничего 
+		//не можем инициализировать, присваивать и т.д. Без удаления  будет утечка памяти
+	{
+		//Shallow copy:
+		//this->size = other.size;
+		//this->str = other.str;
+		other.size = 0;
+		other.str = nullptr;
+		cout << "MoveConstructor:\t" << this << endl;
+	}
+
 
 	~String()
 	{
@@ -60,6 +78,7 @@ public:
 
 	String& operator=(const String& other)
 	{
+		if (this == &other)return*this; // защита класса и объектов от нежданчика
 		delete[] str;
 		this->size = other.size;
 		this->str = new char[size] {};
@@ -118,7 +137,7 @@ std::ostream& operator<<(std::ostream& os, const String& obj)
 	return os << obj.get_str();
 }
 #define HOME_WORK
- 
+#define CONSTRUCTORS_CALLING
 
 // оператор [] возварщает значение по индексу
 
@@ -138,11 +157,42 @@ void main()
 	cout << str2 << endl;
 	//String str3 = str1 + str2;
 	String str3;
-	str3 = str1 + str2;
+	str3 = str1 +" " + str2;
 	cout << str3 << endl;
 
 	str1 += str2;
 	cout << str1 << endl;
 
 #endif  HOME_WORK
+
+#ifdef CONSTRUCTORS_CALLING
+	String str1; // Default Constractor
+	str1.print();
+
+	String str2(22);// Single-Argument constractor 'int'
+	str2.print();
+
+	String str3 = "Hello";// Single-Argument Constractor 'const char*'
+	str3.print();
+
+	String str4();// Default Constractor НЕВОЗМОЖНО вызватьтаким образом
+	// В этой строке объявляется функция  str4, которая ничего не принимает
+	// и возвращает объект класса String
+	//str4.print();
+	// Если нужно явно вызать конструктор по умолчанию,  то это можно сделать так:
+	String str5{}; // Default constractor
+	str5.print();
+
+	String str6{"World"};
+	str6.print();
+
+	String str7 = str3; // Copy Constractor (здесь создается объект, поэтому вызывается копи-констрауктор,
+	//несмотря нато что мы использует оператор "="
+	str7.print();
+
+	String str8;
+	str8 = str6;// здест вызыввается CopyAssigment
+	str8.print();
+
+#endif CONSTRUCTORS_CALLING
 };
